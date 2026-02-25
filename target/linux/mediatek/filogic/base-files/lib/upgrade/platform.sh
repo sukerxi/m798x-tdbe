@@ -130,6 +130,7 @@ platform_do_upgrade() {
 	glinet,gl-x3000|\
 	glinet,gl-xe3000|\
 	hiveton,h5000m|\
+	tenda,be12-pro|\
 	huasifei,wh3000|\
 	mediatek,mt7987a|\
 	smartrg,sdg-8612|\
@@ -219,6 +220,7 @@ platform_check_image() {
 	bananapi,bpi-r4|\
 	bananapi,bpi-r4-poe|\
 	hiveton,h5000m|\
+	tenda,be12-pro|\
 	tplink,tl-7dr7230-rev1.0-sp2|\
 	cmcc,rax3000m)
 		magic="$(dd if="$1" bs=1 skip=257 count=5 2>/dev/null)"
@@ -262,6 +264,7 @@ platform_copy_config() {
 	glinet,gl-x3000|\
 	glinet,gl-xe3000|\
 	hiveton,h5000m|\
+	tenda,be12-pro|\
 	huasifei,wh3000|\
 	mediatek,mt7987a|\
 	jdcloud,re-cp-03|\
