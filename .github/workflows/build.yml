@@ -73,43 +73,30 @@ jobs:
           # V=s 输出详细日志以便排查错误
           make -j$(nproc) V=s 2>&1 | tee build.log
 
-      - name: Prepare Artifacts
-        if: always()
-        run: |
-          mkdir -p upload
-          # 查找并复制生成的固件文件 (bin, itb, ubi, img 等)
-          find bin/targets/ -type f -name "*.bin" -exec cp {} upload/ \;
-          find bin/targets/ -type f -name "*.itb" -exec cp {} upload/ \;
-          find bin/targets/ -type f -name "*.ubi" -exec cp {} upload/ \;
-          find bin/targets/ -type f -name "*.img.gz" -exec cp {} upload/ \;
-          find bin/targets/ -type f -name "*.squashfs.img" -exec cp {} upload/ \;
-          
-          # 如果编译失败，也上传日志
-          if [ -f build.log ]; then
-            cp build.log upload/
-          fi
-
-      - name: Upload to Release
-        if: success()
-        uses: softprops/action-gh-release@v2
+      - name: Create a release
+        uses: ncipollo/release-action@v1
         with:
-          files: upload/*.bin upload/*.itb upload/*.ubi upload/*.img*
-          tag_name: mt7987_mt7992-${{ github.run_number }}
-          name: "ImmortalWrt MT7987/MT7992 Build #${{ github.run_number }}"
+          makeLatest: true
+          # 标签名保持你的风格
+          tag: mt7987_mt7992-${{ github.run_number }}
+          # 关键修改：使用 ** 递归匹配所有子目录下的固件文件
+          # 这里匹配 bin/targets 下任意层级的 .bin, .itb, .ubi, .img.gz 等文件
+          artifacts: "bin/targets/**/*.{bin,itb,ubi,img.gz,squashfs.img}"
+          # 可选：如果也想上传日志，可以加上
+          # artifacts: "bin/targets/**/*.{bin,itb,ubi,img.gz,squashfs.img},build.log"
           body: |
             **Build Details:**
             - **Source:** My Repository (${{ github.repository }})
             - **Branch:** mt798x-mt799x-6.6-mtwifi
             - **Config:** mt7987_mt7992.config
             - **Commit:** ${{ github.sha }}
-            - **Time:** ${{ github.event.head_commit.timestamp }}
-            
             **Firmware Files:**
             - Included *.bin, *.itb, *.ubi files for MT7987/MT7992 devices.
           draft: false
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+
 
       - name: Upload Logs (If Failed)
         if: failure()
