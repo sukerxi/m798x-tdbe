@@ -81,7 +81,7 @@ jobs:
           tag: mt7987_mt7992-${{ github.run_number }}
           # 关键修改：使用 ** 递归匹配所有子目录下的固件文件
           # 这里匹配 bin/targets 下任意层级的 .bin, .itb, .ubi, .img.gz 等文件
-          artifacts: bin/targets/**/*
+          artifacts: bin/targets/mediatek/filogic/*
           # 可选：如果也想上传日志，可以加上
           # artifacts: "bin/targets/**/*.{bin,itb,ubi,img.gz,squashfs.img},build.log"
           body: |
@@ -90,8 +90,6 @@ jobs:
             - **Branch:** mt798x-mt799x-6.6-mtwifi
             - **Config:** mt7987_mt7992.config
             - **Commit:** ${{ github.sha }}
-            **Firmware Files:**
-            - Included *.bin, *.itb, *.ubi files for MT7987/MT7992 devices.
           draft: false
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
