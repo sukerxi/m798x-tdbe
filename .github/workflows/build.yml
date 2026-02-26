@@ -1,12 +1,12 @@
 name: Build ImmortalWrt
 
 on:
-  # push:
-    # branches:
-    #   - mt798x-mt799x-6.6-mtwifi # 当推送到该分支时触发
-    # paths-ignore:
-    #   - '**.md' # 忽略 markdown 文档的修改
-    #   - 'LICENSE'
+  push:
+    branches:
+      - mt798x-mt799x-6.6-mtwifi # 当推送到该分支时触发
+    paths-ignore:
+      - '**.md' # 忽略 markdown 文档的修改
+      - 'LICENSE'
   workflow_dispatch: # 允许手动在网页触发
 
 jobs:
