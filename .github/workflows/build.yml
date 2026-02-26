@@ -60,11 +60,13 @@ jobs:
             cp -f defconfig/mt7987_mt7992.config .config
             echo "✅ Successfully loaded defconfig/mt7987_mt7992.config"
             
+            # 👇 新增：打印 .config 文件内容到日志
+            echo "📄 Content of .config:"
+            cat .config
+            
             # 执行 make defconfig 以确保配置完整并处理依赖
             # make defconfig
             
-            # 显示最终配置的关键部分（可选，用于调试）
-            # grep CONFIG_TARGET_DEVICE .config
           else
             echo "❌ Error: defconfig/mt7987_mt7992.config not found in defconfig/ directory!"
             ls -R defconfig/
