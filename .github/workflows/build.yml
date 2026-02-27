@@ -89,7 +89,7 @@ jobs:
           # 开始编译
           # -j$(nproc) 使用所有可用 CPU 核心
           # V=s 输出详细日志以便排查错误
-          make -j$(nproc) V=s 2>&1 | tee build.log
+          make -j$(nproc) V=s
 
       - name: Create a release
         uses: ncipollo/release-action@v1
