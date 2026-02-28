@@ -63,7 +63,7 @@ jobs:
             cat .config
             
             # 执行 make defconfig 以确保配置完整并处理依赖
-            # make defconfig
+            make defconfig 
             
           else
             echo "❌ Error: defconfig/mt7987_mt7992.config not found in defconfig/ directory!"
