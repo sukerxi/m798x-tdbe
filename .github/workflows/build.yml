@@ -1,0 +1,107 @@
+name: Build ImmortalWrt
+
+on:
+  push:
+    branches-ignore:
+      - tenda-be12-pro  # 排除 tenda-be12-pro 分支，其他所有分支都会触发
+    tags:
+      - v**
+  workflow_dispatch: # 允许手动在网页触发
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        config_name: [ minimal, full ]
+    steps:
+      - name: Checkout My Repository Source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 获取完整历史，方便某些脚本获取版本号（可选）
+
+      - name: Initialize Build Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          # 安装 OpenWrt/ImmortalWrt 构建所需依赖
+          sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          sudo timedatectl set-timezone "Asia/Shanghai"
+      
+
+      - name: Update and Install Feeds
+        run: |
+          # 当前目录已经是源码根目录
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Load Configuration (${{ matrix.config_name }})
+        run: |
+          CONFIG_FILE="defconfig/${{ matrix.config_name }}.config"
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "❌ Config file not found: $CONFIG_FILE"
+            exit 1
+          fi
+          cp -f "$CONFIG_FILE" .config
+          echo "✅ Successfully loaded $CONFIG_FILE"
+
+          make defconfig
+          echo "📄 Content of .config:"
+          cat .config
+
+      - name: Compile Firmware
+        run: |
+          make -j$(nproc) -s V=s
+
+      # ... 构建步骤 ...
+      - name: Upload Artifacts (as ZIPs, unavoidable)
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.config_name }}
+          path: bin/targets/mediatek/filogic/*.bin
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-firmwares
+
+      - name: Flatten and Rename Files
+        run: |
+          mkdir -p final-release
+          for config_dir in all-firmwares/*/; do
+            config_name=$(basename "$config_dir")
+            for bin_file in "$config_dir"*.bin; do
+              if [ -f "$bin_file" ]; then
+                base=$(basename "$bin_file")
+                cp "$bin_file" "final-release/${base%.bin}-${config_name}.bin"
+              fi
+            done
+          done
+
+      - name: Create Unified Release
+        uses: softprops/action-gh-release@v2
+        with:
+          make_latest: true
+          tag_name: ${{ github.ref_name }}   # ← 此时 github.ref_name 就是 tag 名，如 v0.0.1
+          files: final-release/*.bin
+          draft: true
+          body: |
+            ## 📦 发布说明
+
+            ### ✨ 构建配置
+            - **minimal**: 最小化构建，仅包含核心功能。
+            - **full**: 完整构建，包含以下额外预装插件：
+              - `luci-proto-wireguard`: WireGuard 协议支持
+              - `luci-app-wol`: 网络唤醒 (WoL) 功能
+              - `luci-i18n-wol-zh-cn`: WoL 中文语言包
+              - `ddns-scripts-cloudflare`: Cloudflare DDNS 脚本
+              - `luci-app-ddns`: 动态 DNS 配置界面
+              - `luci-i18n-ddns-zh-cn`: DDNS 中文语言包
+              - `bind-host`: BIND DNS 服务器宿主支持

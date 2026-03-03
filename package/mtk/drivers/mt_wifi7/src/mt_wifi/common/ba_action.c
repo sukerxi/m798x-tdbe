@@ -1956,14 +1956,40 @@ BOOLEAN ba_resrc_ori_add(
 	}
 
 	Idx = ba_info->OriWcidArray[TID];
-	pBAEntry = &ba_ctl->BAOriEntry[Idx];
 	if (Idx == 0) {
-		Status = FALSE;
-		goto end;
+		/*
+		 * This can happen in two scenarios:
+		 * 1. Unsolicited AddBA Response from peer (e.g., Apple devices).
+		 * 2. Race condition where the local BA entry was cleaned up before receiving the response.
+		 * We try to recover by allocating a new entry on-the-fly.
+		 */
+		MTWF_DBG(pAd, DBG_CAT_PROTO, CATPROTO_BA, DBG_LVL_WARN,
+			"Recovering BA session: Wcid=%d, TID=%d. Allocating new entry.\n", wcid, TID);
+
+		pBAEntry = ba_alloc_ori_entry(pAd, &Idx);
+		if (!pBAEntry || Idx == 0) {
+			MTWF_DBG(pAd, DBG_CAT_PROTO, CATPROTO_BA, DBG_LVL_ERROR,
+				"Failed to alloc BA entry for recovery\n");
+			Status = FALSE;
+			goto end;
+		}
+		// Initialize the recovered entry as if the handshake just completed.
+		pBAEntry->TID = TID;
+		pBAEntry->pEntry = pEntry;
+		ba_info->OriWcidArray[TID] = Idx;
+		// The status will be Originator_USED, which we handle below.
+	} else {
+		pBAEntry = &ba_ctl->BAOriEntry[Idx];
 	}
 
 	/* make sure originator is waiting for response, in case unsolicited add ba response is recieved. */
-	if (pBAEntry->ORI_BA_Status == Originator_WaitRes) {
+	/*
+	 * Accept BA setup if status is either:
+	 * - Originator_WaitRes: Normal case (we sent AddBA Req)
+	 * - Originator_USED: Recovered/unsolicited case (e.g., from Apple)
+	 */
+	if ((pBAEntry->ORI_BA_Status == Originator_WaitRes) ||
+	    (pBAEntry->ORI_BA_Status == Originator_USED)) {
 		pBAEntry->BAWinSize = ba_wsize;
 		pBAEntry->TimeOutValue = timeout;
 		pBAEntry->amsdu_cap = amsdu_en;

@@ -209,7 +209,7 @@ return view.extend({
 
 		o = s.option(form.Flag, 'fastpath_mh_eth_hnat', _('Enable ethernet HNAT'),
 			_('Enable hardware offloading for wired connections.'));
-		o.default = o.enabled;
+		o.default = o.disabled;
 		o.rmempty = false;
 		o.depends('fastpath', 'mediatek_hnat');
 
