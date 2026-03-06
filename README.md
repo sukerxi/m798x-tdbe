@@ -5,6 +5,19 @@
 - **核心特性**：启用 MTK_HNAT 及无线闭源驱动
 - **平台**：MT7987_MT7992
 
+## 🐛 已知问题
+- **Apple 设备断流问题**
+  - **现象**：iPhone/iPad 等苹果设备连接后出现网络中断。
+  - **日志报错**：类似 `peer_addba_rsp_action() 2965: wcid=12 TID=3 Token=5 add ori resrc fail`
+  - **初步分析**：疑似 `HT_BAWinSize`设置过大，导致部分客户端兼容性异常。
+  - **状态**：已将 HT_BAWinSize 恢复默认值 256，并禁用内存压缩（`CONFIG_HWIFI_MEM_SHRINK=n`）。目前暂未复现异常，持续观察中。
+
+- **airoha-en8811h 网络重启失效问题**
+  - **现象**：执行网络重启操作后，`eth2` 接口无法自动恢复，必须重启整个路由器方能生效。
+  - **初步分析**：高度疑似 `airoha-en8811h` 驱动程序存在缺陷，导致接口状态重置异常。
+  - **状态**：fixed，参考immortalwrt主线，依赖kernel驱动与linux-firmware固件。
+
+
 ## ⚠️ 免责声明
 > **重要提示**：
 > 1. 本项目仅供技术研究与个人娱乐。
@@ -117,3 +130,13 @@ flowchart LR
 | **igetmail** | [Right Forum Thread](https://www.right.com.cn/forum/thread-8463884-1-1.html) | 详尽的刷机保命指南，新手福音                           |
 | **5252pt** | [OpenWrt PR #21461](https://github.com/openwrt/openwrt/pull/21461) | 推动 Tenda BE12 Pro 进入 OpenWrt 主线，设备DTS源头。 |
 | **hanwckf** | [CMi Blog](https://cmi.hanwckf.top/p/immortalwrt-mt798x/) | MT798x 系列先行者，技术指引|
+
+## 📜 配置文件解析规则
+| `.config` 中的内容 | 是否被 `kconfig.pl` 解析？ | 合并后值 | 是否打包？ | 说明 |
+|-------------------|----------------------------|--------|-----------|------|
+| （完全不存在相关行） | ❌ 不解析 | 来自 `DEVICE_PACKAGES` → `y` | ✅ 是 | 默认行为，正常打包 |
+| `CONFIG_PACKAGE_airoha-en8811h-firmware=y` | ✅ 解析为 `y` | `y` | ✅ 是 | 显式启用，优先级高 |
+| `# CONFIG_PACKAGE_airoha-en8811h-firmware is not set` | ✅ 解析为 `#undef` | `#undef`（等效 `n`） | ❌ 否 | 显式禁用，覆盖 `DEVICE_PACKAGES` |
+| `# CONFIG_PACKAGE_airoha-en8811h-firmware=y` | ❌ 视为普通注释，跳过 | 未定义 → 使用默认（即 `DEVICE_PACKAGES` 提供的 `y`） | ✅ 是 | 只是注释，不影响！ |
+| `CONFIG_PACKAGE_airoha-en8811h-firmware=n` | ✅ 解析为 `n` | `n` | ❌ 否 | 明确关闭（罕见，但有效） |
+
