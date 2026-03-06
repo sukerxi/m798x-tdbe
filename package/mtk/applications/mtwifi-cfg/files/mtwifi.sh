@@ -25,7 +25,7 @@ detect_mtwifi() {
 
 				if [ "$band" = "2g" ]; then
 					htmode="EHT20"
-					htbsscoex="1"
+					htbsscoex="0"
 					ssid="ImmortalWrt-2.4G"
 					channel="auto"
 				elif [ "$band" = "5g" ]; then

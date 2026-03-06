@@ -1,4 +1,4 @@
-name: Build ImmortalWrt
+name: Build with additional package
 
 on:
   push:
@@ -39,7 +39,19 @@ jobs:
           
           cp -f defconfig/mt7987_mt7992.config .config
           echo "✅ Successfully loaded defconfig/mt7987_mt7992.config"
-          
+
+          # 👇 追加自定义配置项
+          cat >> .config <<EOF
+          # 自定义
+          CONFIG_PACKAGE_luci-proto-wireguard=y
+          CONFIG_PACKAGE_luci-app-wol=y
+          CONFIG_PACKAGE_luci-i18n-wol-zh-cn=y
+          CONFIG_PACKAGE_ddns-scripts-cloudflare=y
+          CONFIG_PACKAGE_luci-app-ddns=y
+          CONFIG_PACKAGE_luci-i18n-ddns-zh-cn=y
+          CONFIG_PACKAGE_bind-host=y
+          EOF
+
           # 执行 make defconfig 以确保配置完整并处理依赖
           make defconfig 
           
@@ -62,3 +74,8 @@ jobs:
           files: | 
             bin/targets/mediatek/filogic/*
           draft: true
+          body: |
+            📦 集成了以下软件包：
+            - **WireGuard 支持**（含 LuCI 界面）
+            - **网络唤醒 (WOL)**（含中文界面）
+            - **DDNS 动态域名解析**（支持 Cloudflare，含中文界面）
