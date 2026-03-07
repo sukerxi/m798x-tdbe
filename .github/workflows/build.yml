@@ -1,9 +1,9 @@
 name: Build ImmortalWrt
 
 on:
-  push:
-    branches:
-      - tenda-be12-pro
+#  push:
+#    branches:
+#      - tenda-be12-pro
   workflow_dispatch: # 允许手动在网页触发
 
 jobs:
@@ -81,5 +81,5 @@ jobs:
           files: | 
             bin/targets/mediatek/filogic/*
 #          generate_release_notes: true
-#          draft: true
+          draft: true
 #          prerelease: false
