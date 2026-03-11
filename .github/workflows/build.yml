@@ -11,6 +11,11 @@ jobs:
     runs-on: ubuntu-22.04
     permissions:
       contents: write
+    env:
+      ENABLE_ISTORE: "true"
+      ISTORE_FEED_REPO: "https://github.com/linkease/istore"
+      ISTORE_FEED_REF: "main"
+      ISTORE_PACKAGE: "luci-app-store"
     
     steps:
       - name: Checkout My Repository Source
@@ -28,6 +33,18 @@ jobs:
           
           sudo timedatectl set-timezone "Asia/Shanghai"
       
+      - name: Mutate Feeds for iStore
+        if: env.ENABLE_ISTORE == 'true'
+        run: |
+          ISTORE_FEED_LINE="src-git istore ${ISTORE_FEED_REPO};${ISTORE_FEED_REF}"
+
+          if ! grep -qE '^src-git[[:space:]]+istore[[:space:]]' feeds.conf.default; then
+            printf '\n%s\n' "$ISTORE_FEED_LINE" >> feeds.conf.default
+          fi
+
+          echo "✅ Injected iStore feed:"
+          grep -E '^src-git[[:space:]]+istore[[:space:]]' feeds.conf.default
+
 
       - name: Update and Install Feeds
         run: |
@@ -35,12 +52,31 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+          if [ "${ENABLE_ISTORE}" = "true" ]; then
+            ./scripts/feeds install -d y -p istore "${ISTORE_PACKAGE}"
+          fi
+
       - name: Load Configuration (mt7987_mt7992)
         run: |
+          enable_package() {
+            local pkg="$1"
+
+            if grep -q "^# CONFIG_PACKAGE_${pkg} is not set$" .config; then
+              sed -i "s/^# CONFIG_PACKAGE_${pkg} is not set$/CONFIG_PACKAGE_${pkg}=y/" .config
+            elif ! grep -q "^CONFIG_PACKAGE_${pkg}=y$" .config; then
+              echo "CONFIG_PACKAGE_${pkg}=y" >> .config
+            fi
+          }
+
           # 检查配置文件是否存在
           if [ -f "defconfig/mt7987_mt7992.config" ]; then
             cp -f defconfig/mt7987_mt7992.config .config
             echo "✅ Successfully loaded defconfig/mt7987_mt7992.config"
+
+            if [ "${ENABLE_ISTORE}" = "true" ]; then
+              enable_package "${ISTORE_PACKAGE}"
+              echo "✅ Enabled ${ISTORE_PACKAGE} in .config"
+            fi
             
             # 👇 新增：打印 .config 文件内容到日志
             echo "📄 Content of .config:"
