@@ -65,17 +65,13 @@ jobs:
           # -j$(nproc) 使用所有可用 CPU 核心
           # V=s 输出详细日志以便排查错误
           make -j$(nproc) V=s
-
+      
       - name: Create a release
         uses: softprops/action-gh-release@v2
         with:
-          make_latest: true # 对应原来的 makeLatest: true
-          tag_name: mt7987_mt7992-tenda-be12pro-${{ github.run_number }}
-          files: | 
+          make_latest: true
+          tag_name: ${{ github.ref_name }}-${{ github.run_number }}
+          files: |
             bin/targets/mediatek/filogic/*
           draft: true
-          body: |
-            📦 集成了以下软件包：
-            - **WireGuard 支持**（含 LuCI 界面）
-            - **网络唤醒 (WOL)**（含中文界面）
-            - **DDNS 动态域名解析**（支持 Cloudflare，含中文界面）
+
