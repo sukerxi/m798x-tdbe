@@ -625,7 +625,7 @@ end
                 set_dat(dats, apidx, "PpMuMimoUlEnable", v.config.mumimo_ul)
                 set_dat(dats, apidx, "PpOfdmaDlEnable", v.config.ofdma_dl)
                 set_dat(dats, apidx, "PpOfdmaUlEnable", v.config.ofdma_ul)
-                set_dat(dats, apidx, "HT_BAWinSize", v.config.ba_win_size)
+                set_dat(dats, apidx, "HT_BAWinSize", 1024)
             elseif is_ax_mode(cfg) then
                 set_dat(dats, apidx, "MuMimoDlEnable", v.config.mumimo_dl)
                 set_dat(dats, apidx, "MuMimoUlEnable", v.config.mumimo_ul)
