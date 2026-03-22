@@ -28,8 +28,17 @@
 
 #### 📊 使用体验反馈
 *   **🌡️ 温度表现**：相比官方原厂固件，设备运行温度**有所下降**。
-*   **📶 信号强度**：
-    *   **5G 无线信号**：体感上与原厂固件**无异**。
+*   **📶 无线速度**：
+    *   **5G 无线速度**：体感上与原厂固件**无异**。
+
+
+## 🐛 已知问题
+
+- **苹果手机断流**
+    - **现象**：使用苹果设备连接 WiFi 时，可能出现网络间歇性断开或速度骤降。
+    - **原因**：BA (Block Ack) 机制与 A-MSDU (Aggregate MAC Service Data Unit) 功能在特定场景下与苹果设备的兼容性冲突。
+    - **治标不治本方案**：在无线配置中关闭 **A-MSDU** 功能。
+
 
 ## 🏗️ Tenda BE12 Pro 硬件架构分析
 
@@ -108,12 +117,6 @@ flowchart LR
 | **5252pt** | [OpenWrt PR #21461](https://github.com/openwrt/openwrt/pull/21461) | 推动 Tenda BE12 Pro 进入 OpenWrt 主线，设备DTS源头。 |
 | **hanwckf** | [CMi Blog](https://cmi.hanwckf.top/p/immortalwrt-mt798x/) | MT798x 系列先行者，技术指引|
 
-## 📜 配置文件解析规则
-| `.config` 中的内容 | 是否被 `kconfig.pl` 解析？ | 合并后值 | 是否打包？ | 说明 |
-|-------------------|----------------------------|--------|-----------|------|
-| （完全不存在相关行） | ❌ 不解析 | 来自 `DEVICE_PACKAGES` → `y` | ✅ 是 | 默认行为，正常打包 |
-| `CONFIG_PACKAGE_airoha-en8811h-firmware=y` | ✅ 解析为 `y` | `y` | ✅ 是 | 显式启用，优先级高 |
-| `# CONFIG_PACKAGE_airoha-en8811h-firmware is not set` | ✅ 解析为 `#undef` | `#undef`（等效 `n`） | ❌ 否 | 显式禁用，覆盖 `DEVICE_PACKAGES` |
-| `# CONFIG_PACKAGE_airoha-en8811h-firmware=y` | ❌ 视为普通注释，跳过 | 未定义 → 使用默认（即 `DEVICE_PACKAGES` 提供的 `y`） | ✅ 是 | 只是注释，不影响！ |
-| `CONFIG_PACKAGE_airoha-en8811h-firmware=n` | ✅ 解析为 `n` | `n` | ❌ 否 | 明确关闭（罕见，但有效） |
+
+
 
