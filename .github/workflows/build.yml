@@ -11,8 +11,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    permissions:
-      contents: write
     strategy:
       matrix:
         config_name: [ minimal, full ]
@@ -65,7 +63,9 @@ jobs:
   publish:
     needs: build
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+    permissions:
+      contents: write
+    #if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
     steps:
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
