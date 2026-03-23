@@ -1,14 +1,19 @@
 name: Build ImmortalWrt
 
 on:
+  push:
+    branches-ignore:
+      - tenda-be12-pro  # 排除 tenda-be12-pro 分支，其他所有分支都会触发
+    tags:
+      - v**
   workflow_dispatch: # 允许手动在网页触发
 
 jobs:
   build:
     runs-on: ubuntu-22.04
-    permissions:
-      contents: write
-    
+    strategy:
+      matrix:
+        config_name: [ minimal, full ]
     steps:
       - name: Checkout My Repository Source
         uses: actions/checkout@v4
@@ -21,7 +26,6 @@ jobs:
         run: |
           # 安装 OpenWrt/ImmortalWrt 构建所需依赖
           sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.org/init_build_environment.sh)'
-          
           sudo timedatectl set-timezone "Asia/Shanghai"
       
 
@@ -31,32 +35,60 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Load Configuration (mt7987_mt7992)
+      - name: Load Configuration (${{ matrix.config_name }})
         run: |
-          
-          cp -f defconfig/mt7987_mt7992.config .config
-          echo "✅ Successfully loaded defconfig/mt7987_mt7992.config"
-          
-          # 执行 make defconfig 以确保配置完整并处理依赖
-          make defconfig 
-          
-          # 👇 打印 .config 文件内容到日志
+          CONFIG_FILE="defconfig/${{ matrix.config_name }}.config"
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "❌ Config file not found: $CONFIG_FILE"
+            exit 1
+          fi
+          cp -f "$CONFIG_FILE" .config
+          echo "✅ Successfully loaded $CONFIG_FILE"
+
+          make defconfig
           echo "📄 Content of .config:"
           cat .config
 
       - name: Compile Firmware
         run: |
-          # 开始编译
-          # -j$(nproc) 使用所有可用 CPU 核心
-          # V=s 输出详细日志以便排查错误
           make -j$(nproc) V=s
-      - name: Create a release
+
+      # ... 构建步骤 ...
+      - name: Upload Artifacts (as ZIPs, unavoidable)
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.config_name }}
+          path: bin/targets/mediatek/filogic/*.bin
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    #if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-firmwares
+
+      - name: Flatten and Rename Files
+        run: |
+          mkdir -p final-release
+          for config_dir in all-firmwares/*/; do
+            config_name=$(basename "$config_dir")
+            for bin_file in "$config_dir"*.bin; do
+              if [ -f "$bin_file" ]; then
+                base=$(basename "$bin_file")
+                cp "$bin_file" "final-release/${base%.bin}-${config_name}.bin"
+              fi
+            done
+          done
+
+      - name: Create Unified Release
         uses: softprops/action-gh-release@v2
         with:
           make_latest: true
-          tag_name: ${{ github.ref_name }}-${{ github.run_number }}
-          files: |
-            bin/targets/mediatek/filogic/*
-          draft: true
-
-
+          tag_name: ${{ github.ref_name }}   # ← 此时 github.ref_name 就是 tag 名，如 v0.0.1
+          files: final-release/*.bin
+          draft: false
