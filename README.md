@@ -101,12 +101,13 @@ flowchart LR
 ## 🙏 鸣谢与参考资源
 本项目站在巨人的肩膀上，特别感谢以下贡献者与开源项目：
 
-| 贡献者/组织 | 参考链接 | 备注                                       |
-| :--- | :--- |:-----------------------------------------|
+| 贡献者/组织          | 参考链接 | 备注                                       |
+|:----------------| :--- |:-----------------------------------------|
 | **padavanonly** | [GitHub: immortalwrt-mt798x-6.6](https://github.com/padavanonly/immortalwrt-mt798x-6.6/tree/mt798x-mt799x-6.6-mtwifi) | 代码库源头，项目基石                               |
-| **igetmail** | [Right Forum Thread](https://www.right.com.cn/forum/thread-8463884-1-1.html) | 详尽的刷机保命指南，新手福音                           |
-| **5252pt** | [OpenWrt PR #21461](https://github.com/openwrt/openwrt/pull/21461) | 推动 Tenda BE12 Pro 进入 OpenWrt 主线，设备DTS源头。 |
-| **hanwckf** | [CMi Blog](https://cmi.hanwckf.top/p/immortalwrt-mt798x/) | MT798x 系列先行者，技术指引|
+| **igetmail**    | [Right Forum Thread](https://www.right.com.cn/forum/thread-8463884-1-1.html) | 详尽的刷机保命指南，新手福音                           |
+| **5252pt**      | [OpenWrt PR #21461](https://github.com/openwrt/openwrt/pull/21461) | 推动 Tenda BE12 Pro 进入 OpenWrt 主线，设备 DTS 源头。 |
+| **hanwckf**     | [CMi Blog](https://cmi.hanwckf.top/p/immortalwrt-mt798x/) | MT798x 系列先行者，技术指引 |
+| **deepwiki**    | [DeepWiki: MTK Hardware NAT & PPE](https://deepwiki.com/tagatac/mtk-openwrt-feeds/4.2-hardware-nat-and-ppe) | MTK 硬件 NAT 与 PPE 技术深度解析 |
 
 
 
