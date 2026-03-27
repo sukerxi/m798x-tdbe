@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    #if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+    if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
     steps:
       - name: Download All Artifacts
         uses: actions/download-artifact@v4
@@ -91,4 +91,17 @@ jobs:
           make_latest: true
           tag_name: ${{ github.ref_name }}   # ← 此时 github.ref_name 就是 tag 名，如 v0.0.1
           files: final-release/*.bin
-          draft: false
+          draft: true
+          body: |
+            ## 📦 发布说明
+
+            ### ✨ 构建配置
+            - **minimal**: 最小化构建，仅包含核心功能。
+            - **full**: 完整构建，包含以下额外预装插件：
+              - `luci-proto-wireguard`: WireGuard 协议支持
+              - `luci-app-wol`: 网络唤醒 (WoL) 功能
+              - `luci-i18n-wol-zh-cn`: WoL 中文语言包
+              - `ddns-scripts-cloudflare`: Cloudflare DDNS 脚本
+              - `luci-app-ddns`: 动态 DNS 配置界面
+              - `luci-i18n-ddns-zh-cn`: DDNS 中文语言包
+              - `bind-host`: BIND DNS 服务器宿主支持

@@ -116,7 +116,7 @@ struct hnat_desc {
 #define skb_hnat_ppe2(skb)						\
 	((skb_hnat_sport(skb) == NR_GMAC3_PORT) && (CFG_PPE_NUM >= 3))
 #define skb_hnat_ppe1(skb)						\
-	((skb_hnat_sport(skb) == NR_GMAC2_PORT) && (CFG_PPE_NUM >= 2))
+	((skb_hnat_sport(skb) == NR_GMAC3_PORT) && (CFG_PPE_NUM >= 2))
 #define skb_hnat_ppe(skb)						\
 	(skb_hnat_ppe2(skb) ? 2 : (skb_hnat_ppe1(skb) ? 1 : 0))
 #define headroom_iface(h) (h.iface)
