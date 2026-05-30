@@ -351,6 +351,14 @@ endif
 endef
 TARGET_DEVICES += bananapi_bpi-r3-mini
 
+define Build/tenda-mkdualimageheader
+	printf '%b' "\x47\x6f\x64\x31\x00\x00\x00\x00" >"$@.new"
+	gzip -c "$@" | tail -c8 >>"$@.new"
+	cat "$@" >>"$@.new"
+	mv "$@.new" "$@"
+endef
+
+
 define Device/tenda_be12-pro
   DEVICE_VENDOR := Tenda
   DEVICE_MODEL := BE12 Pro

@@ -51,7 +51,7 @@ jobs:
 
       - name: Compile Firmware
         run: |
-          make -j$(nproc) V=s
+          make -j$(nproc) -s V=s
 
       # ... 构建步骤 ...
       - name: Upload Artifacts (as ZIPs, unavoidable)
