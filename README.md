@@ -1,5 +1,12 @@
 # Tenda BE12 Pro (BE7200 Ultra) ImmortalWrt-798x 固件
 
+## 🍎 已知问题与重要警告
+> **⚠️ 苹果设备用户请注意**： 
+> 当前固件存在 **Apple 设备（iPhone/iPad/Mac）连接 Wi-Fi 时可能出现断流** 的问题。
+> 由于本人无任何技术能力，**目前无法解决此问题**。
+
+---
+
 ## 📝 概述
 旨在为 **Tenda BE12 Pro (Tenda BE7200 Ultra)** 路由器构建基于 **ImmortalWrt-798x** 的轻量化固件。
 - **核心特性**：启用 MTK_HNAT 及无线闭源驱动
