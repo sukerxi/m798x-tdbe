@@ -26,7 +26,7 @@ mtwifi_defs.vif_cfgs = {
     ["PMFMFPC"] = "0",
     ["PMFMFPR"] = "0",
     ["PMFSHA256"] = "0",
-    ["RekeyInterval"] = "3600",
+    ["RekeyInterval"] = "86400",
     ["DefaultKeyID"] = "1",
     ["IEEE8021X"] = "0",
     ["Key1Type"] = "0",
@@ -43,7 +43,7 @@ mtwifi_defs.vif_cfgs = {
     ["HideSSID"] = "0",
     ["WirelessMode"] = "",
     ["NoForwarding"] = "0",
-    ["APSDCapable"] = "1",
+    ["APSDCapable"] = "0",
     ["WmmCapable"] = "1",
     ["FragThreshold"] = "2346",
     ["RTSThreshold"] = "2347",
@@ -74,7 +74,7 @@ mtwifi_defs.vif_cfgs = {
     ["WdsEnable"] = "0",
     ["WscConfMode"] = "0",
     ["TxRate"] = "0",
-    ["DtimPeriod"] = "1",
+    ["DtimPeriod"] = "3",
 }
 
 mtwifi_defs.vif_cfgs_idx = {
