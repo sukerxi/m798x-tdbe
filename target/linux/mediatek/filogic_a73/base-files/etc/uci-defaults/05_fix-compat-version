@@ -1,8 +1,0 @@
-. /lib/functions.sh
-
-case "$(board_name)" in
-	*)
-		;;
-esac
-
-exit 0

@@ -1,0 +1,144 @@
+name: Build TendaBE12PRO
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout ImmortalWrt Source (25.12-dev-wifi7)
+        uses: actions/checkout@v4
+        with:
+          repository: chasey-dev/immortalwrt-mt798x-rebase
+          ref: 25.12-dev-wifi7
+          fetch-depth: 0
+
+      # 如果你有自己的 defconfig 文件在另一个仓库，需要额外 checkout 或下载
+      # 如果 defconfig 就在上述源码仓库中，则无需此步骤
+      # - name: Checkout Custom Configs
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: YOUR_USERNAME/YOUR_CONFIG_REPO
+      #     path: custom-configs
+
+      - name: Initialize Build Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo bash -c 'bash <(curl -s https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          sudo timedatectl set-timezone "Asia/Shanghai"
+
+      - name: Update and Install Feeds
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Load Configuration
+        run: |
+          CONFIG_FILE="defconfig/low-mem-512m/mt7987-mt7992-be7200.config"
+          if [ ! -f "$CONFIG_FILE" ]; then
+            echo "❌ Config file not found: $CONFIG_FILE"
+            find defconfig/ -name "*.config" || true
+            exit 1
+          fi
+
+          # ✅ 替换 EPAELNA 为 IPAILNA
+          sed -i 's/CONFIG_MTK_WIFI7_SECOND_IF_EPAELNA=y/CONFIG_MTK_WIFI7_SECOND_IF_IPAILNA=y/g' "$CONFIG_FILE"
+          echo "🔧 Patched: EPAELNA → IPAILNA"
+
+          cp -f "$CONFIG_FILE" .config
+          make defconfig
+
+          # 验证修改是否生效
+          if grep -q "CONFIG_MTK_WIFI7_SECOND_IF_IPAILNA=y" .config; then
+            echo "✅ Verified: IPAILNA is set in .config"
+          else
+            echo "❌ Warning: IPAILNA not found in final .config, may have been overridden by defconfig"
+          fi
+
+
+
+
+      - name: Compile Firmware
+        id: compile
+        timeout-minutes: 180
+        continue-on-error: true
+        run: |
+          # 1. 编译并将所有输出重定向到本地文件（不经过stdout，避免日志膨胀）
+          make -j$(nproc) V=s > build.log 2>&1
+          BUILD_EXIT_CODE=$?
+
+          # 2. ✅ 你提供的错误处理逻辑（完整嵌入此处）
+          if [ $BUILD_EXIT_CODE -ne 0 ]; then
+            echo "::error::❌ BUILD FAILED (Exit Code: $BUILD_EXIT_CODE)"
+            echo "=== Error Context ==="
+          
+            ERROR_LINES=$(grep -n -B3 -A3 -iE "error[: ]|fatal|cannot find|no such file|undefined reference|make\[[0-9]+\]: \*\*\*" build.log | head -n 200 || true)
+          
+            if [ -n "$ERROR_LINES" ]; then
+              echo "$ERROR_LINES"
+            else
+              echo "⚠️ No standard error keywords found. Printing last 100 lines of build.log:"
+              tail -n 100 build.log
+            fi
+          
+            exit $BUILD_EXIT_CODE
+          fi
+
+          # 3. 编译成功时的输出
+          echo "✅ Build completed successfully. Full log saved as artifact."
+
+      - name: Upload Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log-${{ github.run_number }}
+          path: build.log
+          retention-days: 7
+          compression-level: 9  # ✅ 最高压缩，进一步减小下载体积
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-mt7987-be7200
+          path: bin/targets/mediatek/filogic/*.bin
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # ✅ 已移除 if 条件，所有触发方式都会执行发布
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-firmwares
+
+      - name: Flatten and Rename Files
+        run: |
+          mkdir -p final-release
+          for dir in all-firmwares/*/; do
+            for bin_file in "$dir"*.bin; do
+              [ -f "$bin_file" ] && cp "$bin_file" final-release/
+            done
+          done
+          echo "📦 Files to release:"
+          ls -lh final-release/
+
+      - name: Create Unified Release
+        uses: softprops/action-gh-release@v2
+        with:
+          make_latest: true
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('dev-{0}', github.run_number) }}
+          files: final-release/*.bin
+          draft: false
+          body: |
+            ## 📦 ImmortalWrt MT7987 BE7200 固件
+            
+            - **源码**: `chasey-dev/immortalwrt-mt798x-rebase` @ `25.12-dev-wifi7`
+            - **配置**: `low-mem-512m / mt7987-mt7992-be7200`
+            - **构建时间**: ${{ github.event.head_commit.timestamp || 'N/A' }}
+            
+            > ⚠️ 非 Tag 触发的构建为开发版，请谨慎使用。
